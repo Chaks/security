@@ -74,7 +74,7 @@ public class CustomSecurityWrapperRequest extends SecurityWrapperRequest {
   /* An inputstream which reads the cached request body */
   public class CachedServletInputStream extends ServletInputStream {
 
-    private ByteArrayInputStream input;
+    private final ByteArrayInputStream input;
 
     public CachedServletInputStream() {
       /* create a new input stream from the cached request body */

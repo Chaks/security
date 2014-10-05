@@ -4,8 +4,12 @@
  */
 package com.mycompany.web.filter;
 
+import com.google.json.JsonSanitizer;
+import com.tcs.web.filter.RequestUtil;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -78,9 +82,18 @@ public class SecureRequestFilter implements Filter {
     if ("POST".equalsIgnoreCase(customSecurityWrapperRequest.getMethod())) {
       String postData = IOUtils.toString((InputStream) customSecurityWrapperRequest.getInputStream(), "UTF-8");
       log("[postData] " + postData);
-      //TODO:
+      if (customSecurityWrapperRequest.getContentType().startsWith("application/json")) {
+        //Sanitize JSON and check for any potential XSS
+        String wellFormedJson = JsonSanitizer.sanitize(postData);
+        List<String> jsonAttributeValues = extractJsonValues(wellFormedJson);
+
+        RequestUtil requestUtil = new RequestUtil(customSecurityWrapperRequest);
+        for (String jsonAttributeValue : jsonAttributeValues) {
+          requestUtil.validateHTTPParameterValue(jsonAttributeValue, null);
+        }
+      }
     }
-    
+
     Throwable problem = null;
     try {
       chain.doFilter(customSecurityWrapperRequest, response);
@@ -102,7 +115,8 @@ public class SecureRequestFilter implements Filter {
       if (problem instanceof IOException) {
         throw (IOException) problem;
       }
-      RequestDispatcher requestDispatcher = customSecurityWrapperRequest.getRequestDispatcher(filterConfig.getInitParameter("intrusionErrorPage"));
+      RequestDispatcher requestDispatcher = customSecurityWrapperRequest.getRequestDispatcher(
+              filterConfig.getInitParameter("intrusionErrorPage"));
       requestDispatcher.forward(customSecurityWrapperRequest, response);
       //sendProcessingError(problem, response);
     }
@@ -164,5 +178,49 @@ public class SecureRequestFilter implements Filter {
 
   public void log(String msg) {
     filterConfig.getServletContext().log(msg);
+  }
+
+  private List<String> extractJsonValues(String jsonString) {
+    List<String> valueList = new ArrayList<String>();
+
+    int jsonLength = jsonString.length();
+    boolean mark = false;
+    boolean unmark = false;
+    StringBuilder valueBuilder = new StringBuilder();
+    for (int i = 0; i < jsonLength; i++) {
+      char ch = jsonString.charAt(i);
+      switch (ch) {
+        case ':':
+          mark = true;
+          valueBuilder.setLength(0);
+          break;
+        case ',':
+          if (mark) {
+            unmark = true;
+          }
+          break;
+        case '}':
+          if (mark) {
+            unmark = true;
+          }
+          break;
+        default:
+          break;
+      }
+
+      if (mark) {
+        valueBuilder.append(ch);
+      }
+
+      if (mark && unmark) {
+        valueList.add(valueBuilder.toString().replace(",", "").replace(":", "").replace("{", "").replace("}", "").replace("[", "").replace("]", ""));
+        valueBuilder.setLength(0);
+        mark = false;
+        unmark = false;
+      }
+    }
+
+    log("[valueList] " + valueList);
+    return valueList;
   }
 }
