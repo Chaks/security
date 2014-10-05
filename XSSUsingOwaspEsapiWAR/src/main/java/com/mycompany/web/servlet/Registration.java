@@ -4,7 +4,7 @@
  */
 package com.mycompany.web.servlet;
 
-import com.tcs.web.filter.RequestUtil;
+import com.mycompany.web.filter.RequestUtil;
 import java.io.IOException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
