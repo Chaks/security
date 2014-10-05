@@ -5,6 +5,7 @@
  */
 package com.mycompany.web.servlet;
 
+import com.tcs.web.filter.RequestUtil;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,11 +42,14 @@ public class Registration3 extends HttpServlet {
     //codecs.add("org.owasp.esapi.codecs.PercentCodec");
     //codecs.add("org.owasp.esapi.codecs.JavaScriptCodec");
     DefaultEncoder defaultEncoder = new DefaultEncoder(codecs);
-    request.setAttribute("nameEncoded", defaultEncoder.encodeForHTML(request.getParameter("name")));
-    request.setAttribute("name", request.getParameter("name"));
-    request.setAttribute("occupation", request.getParameter("occupation"));
-    request.setAttribute("age", request.getParameter("age"));
-    request.setAttribute("address", request.getParameter("address"));
+
+    RequestUtil requestUtil = new RequestUtil(request);
+
+    request.setAttribute("nameEncoded", defaultEncoder.encodeForHTML(requestUtil.getParameter("name")));
+    request.setAttribute("name", requestUtil.getParameter("name"));
+    request.setAttribute("occupation", requestUtil.getParameter("occupation"));
+    request.setAttribute("age", requestUtil.getParameter("age"));
+    request.setAttribute("address", requestUtil.getParameter("address"));
 
     RequestDispatcher requestDispatcher = request.getRequestDispatcher("/WEB-INF/registration3.jsp");
     requestDispatcher.forward(request, response);

@@ -4,6 +4,7 @@
  */
 package com.mycompany.web.servlet;
 
+import com.tcs.web.filter.RequestUtil;
 import java.io.IOException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -33,11 +34,12 @@ public class Registration extends HttpServlet {
     response.setContentType("text/html;charset=UTF-8");
     //out.println("Name: " + Sanitizers.FORMATTING.sanitize(request.getParameter("name")));
     //out.println("Name: " + ESAPI.validator().getValidSafeHTML("registration.name", request.getParameter("name"), 25, true));
+    RequestUtil requestUtil = new RequestUtil(request);
 
-    request.setAttribute("name", request.getParameter("name"));
-    request.setAttribute("occupation", request.getParameter("occupation"));
-    request.setAttribute("age", request.getParameter("age"));
-    request.setAttribute("address", request.getParameter("address"));
+    request.setAttribute("name", requestUtil.getParameter("name"));
+    request.setAttribute("occupation", requestUtil.getParameter("occupation"));
+    request.setAttribute("age", requestUtil.getParameter("age"));
+    request.setAttribute("address", requestUtil.getParameter("address"));
 
     RequestDispatcher requestDispatcher = request.getRequestDispatcher("/WEB-INF/registration.jsp");
     requestDispatcher.forward(request, response);
